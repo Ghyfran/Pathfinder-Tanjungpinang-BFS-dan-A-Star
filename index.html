@@ -1,156 +1,168 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pathfinder Tanjungpinang — BFS vs A*</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pathfinder Tanjungpinang — BFS vs A*</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <header id="topbar">
-        <h1>🗺 Pathfinder Tanjungpinang</h1>
-        <span class="sep">|</span>
+  <header id="topbar">
+    <h1>🗺 Pathfinder Tanjungpinang</h1>
+    <span class="sep">|</span>
 
     <div class="field-group">
-        <label for="sel-start">Dari:</label>
-        <select id="sel-start" onchange="checkReady()">
-            <option value="">-- Pilih lokasi awal --</option>
-            <option value="taman">Lapangan Pamedan</option>
-            <option value="rsudkota">Madrasah Aliyah Negeri Tanjung Pinang</option>
-            <option value="kopi">BANK RIAU</option>
-        </select>
+      <label for="sel-start">Dari:</label>
+      <select id="sel-start" onchange="checkReady()">
+        <option value="">-- Pilih lokasi awal --</option>
+        <option value="taman">Lapangan Pamedan</option>
+        <option value="rsudkota">Madrasah Aliyah Negeri Tanjung Pinang</option>
+        <option value="kopi">BANK RIAU</option>
+      </select>
     </div>
 
     <div class="field-group">
-        <label for="sel-end">Ke:</label>
-        <select id="sel-end" onchange="checkReady()">
-            <option value="">-- Pilih tujuan --</option>
-            <option value="masjid1">Masjid Al-Istiqomah</option>
-            <option value="masjid2">Apotek Berkat Farma</option>
-            <option value="rsup">Polresta Tanjungpinang</option>
-        </select>
+      <label for="sel-end">Ke:</label>
+      <select id="sel-end" onchange="checkReady()">
+        <option value="">-- Pilih tujuan --</option>
+        <option value="masjid1">Masjid Al-Istiqomah</option>
+        <option value="masjid2">Apotek Berkat Farma</option>
+        <option value="rsup">Polresta Tanjungpinang</option>
+      </select>
     </div>
 
     <div class="field-group">
-        <label>Algoritma:</label>
-        <div class="algo-group">
-            <button class="algo-btn active-bfs" onclick="selectAlgo('bfs', this)">BFS</button>
-            <button class="algo-btn" onclick="selectAlgo('astar', this)">A*</button>
-            <button class="algo-btn" onclick="selectAlgo('both', this)">Keduanya</button>
-        </div>
+      <label>Algoritma:</label>
+      <div class="algo-group">
+        <button class="algo-btn active-bfs" onclick="selectAlgo('bfs', this)">BFS</button>
+        <button class="algo-btn" onclick="selectAlgo('astar', this)">A*</button>
+        <button class="algo-btn" onclick="selectAlgo('both', this)">Keduanya</button>
+      </div>
     </div>
 
     <div class="speed-group">
-        <label for="sel-speed">Kecepatan:</label>
-        <select id="sel-speed">
-            <option value="200">Lambat</option>
-            <option value="100" selected>Normal</option>
-            <option value="25">Cepat</option>
-            <option value="1">Sangat Cepat</option>
-        </select>
+      <label for="sel-speed">Kecepatan:</label>
+      <select id="sel-speed">
+        <option value="200">Lambat</option>
+        <option value="100" selected>Normal</option>
+        <option value="25">Cepat</option>
+        <option value="1">Sangat Cepat</option>
+      </select>
     </div>
 
-        <button id="btn-run" disabled onclick="run()">▶ Cari Rute</button>
-        <button id="btn-stop" onclick="stopAnimation()">■ Stop</button>
-        <button id="btn-reset" onclick="resetAll()">Reset</button>
-    </header>
+    <button id="btn-run" disabled onclick="run()">▶ Cari Rute</button>
+    <button id="btn-stop" onclick="stopAnimation()">■ Stop</button>
+    <button id="btn-reset" onclick="resetAll()">Reset</button>
+  </header>
 
-    <section id="status-bar">
-        <span class="pulse-dot idle" id="pulse"></span>
-        <span id="status-text">Pilih lokasi awal dan tujuan untuk memulai.</span>
-        <span id="step-counter"></span>
-    </section>
+  <section id="status-bar">
+    <span class="pulse-dot idle" id="pulse"></span>
+    <span id="status-text">Pilih lokasi awal dan tujuan untuk memulai.</span>
+    <span id="step-counter"></span>
+  </section>
 
-    <main id="main">
+  <main id="main">
     <section id="map"></section>
 
     <aside id="panel">
-    <section id="empty-state">
+      <section id="empty-state">
         <div class="ico">📍</div>
         Pilih <b>lokasi awal</b> dan <b>tujuan</b>,<br />
         pilih algoritma,<br />
         lalu klik <b>▶ Cari Rute</b>.
-    </section>
+      </section>
 
-        <section id="live-panel">
+      <section id="live-panel">
         <div class="live-title">🔴 Proses Eksplorasi</div>
 
         <div id="bfs-live" class="algo-live hidden">
-        <div class="algo-live-label bfs-label">■ BFS</div>
-            <div class="progress-bar-wrap">
-                <div class="progress-bar-fill bfs-bar" id="bfs-bar"></div>
-            </div>
-            <div class="algo-live-stats">
-                <span id="bfs-visited">0 node dikunjungi</span>
-                <span id="bfs-queue">antrian: 0</span>
-            </div>
+          <div class="algo-live-label bfs-label">■ BFS</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill bfs-bar" id="bfs-bar"></div>
+          </div>
+          <div class="algo-live-stats">
+            <span id="bfs-visited">0 node dikunjungi</span>
+            <span id="bfs-queue">antrian: 0</span>
+          </div>
         </div>
 
         <div id="astar-live" class="algo-live hidden">
-        <div class="algo-live-label astar-label">■ A*</div>
-            <div class="progress-bar-wrap">
-                <div class="progress-bar-fill astar-bar" id="astar-bar"></div>
-            </div>
-            <div class="algo-live-stats">
-                <span id="astar-visited">0 node dikunjungi</span>
-                <span id="astar-fval">f: —</span>
-            </div>
+          <div class="algo-live-label astar-label">■ A*</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill astar-bar" id="astar-bar"></div>
+          </div>
+          <div class="algo-live-stats">
+            <span id="astar-visited">0 node dikunjungi</span>
+            <span id="astar-fval">f: —</span>
+          </div>
         </div>
-        </section>
+      </section>
 
-        <section id="result" class="hidden result-panel"></section>
+      <section id="result" class="hidden result-panel"></section>
 
-        <section class="legend-box">
+      <section class="legend-box">
         <div class="legend-title">Legenda</div>
 
         <div class="legend-grid">
-            <div class="leg">
+          <div class="leg">
             <span class="leg-line bfs-route"></span>
             <span>Jalur BFS</span>
-            </div>
-            <div class="leg">
+          </div>
+          <div class="leg">
             <span class="leg-line astar-route"></span>
             <span>Jalur A*</span>
-            </div>
+          </div>
 
-            <div class="leg-sep"></div>
+          <div class="leg-sep"></div>
 
-            <div class="leg">
+          <div class="leg">
             <span class="leg-dot bfs-explore"></span>
             <span>Node BFS (eksplorasi)</span>
-            </div>
-            <div class="leg">
+          </div>
+          <div class="leg">
             <span class="leg-dot astar-explore"></span>
             <span>Node A* (eksplorasi)</span>
-            </div>
+          </div>
 
-            <div class="leg-sep"></div>
+          <div class="leg-sep"></div>
 
-            <div class="leg">
+          <div class="leg">
             <span class="leg-dot start-dot"></span>
             <span>Titik awal (A)</span>
-            </div>
-            <div class="leg">
+          </div>
+          <div class="leg">
             <span class="leg-dot end-dot"></span>
             <span>Titik tujuan (B)</span>
-            </div>
+          </div>
 
-            <div class="leg-sep"></div>
+          <div class="leg-sep"></div>
 
-            <div class="leg leg-full">
+          <div class="leg leg-full">
             <span class="leg-line road-line"></span>
             <span>Koneksi jalan antar node</span>
-            </div>
+          </div>
         </div>
-        </section>
+      </section>
     </aside>
-    </main>
+  </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script src="js/core/app.js"></script>
-    <script src="js/visualisasidankontrol.js"></script>
+  <script src="js/data/nodes.js"></script>
+  <script src="js/data/edges.js"></script>
+  <script src="js/data/roadways.js"></script>
+
+  <script src="js/core/graph.js"></script>
+  <script src="js/core/map.js"></script>
+
+  <script src="js/heuristic.js"></script>
+  <script src="js/bfs_steps.js"></script>
+  <script src="js/astar_steps.js"></script>
+
+  <script src="js/visualisasidankontrol.js"></script>
+  <script src="js/hasildanperbandingan.js"></script>
+  <script src="js/core/app.js"></script>
 </body>
 </html>
